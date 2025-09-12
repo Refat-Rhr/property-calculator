@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inheritance Calculator | উত্তরাধিকার ক্যালকুলেটর</title>
+    <style>
+        :root {
+            --primary-text-color: #333333;
+            --dark-text-color: #ffffff;
+            --button-bg: #673AB7;
+            --border-color: #e0e0e0;
+            --dark-border-color: #555555;
+            --danger-color: #e74c3c;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f4f4f9; /* হালকা ব্যাকগ্রাউন্ড */
+            color: var(--primary-text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .calculator-container {
+            width: 100%;
+            max-width: 700px;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 1px solid var(--border-color);
+        }
+        .header {
+            background-color: var(--button-bg);
+            color: var(--dark-text-color);
+            padding: 20px;
+            text-align: center;
+            font-size: 1.6em;
+            font-weight: bold;
+            position: relative;
+        }
+        .lang-switcher {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            display: flex;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .lang-switcher button {
+            background: none; border: none; color: var(--dark-text-color); padding: 5px 10px; cursor: pointer; font-size: 0.7em; font-weight: bold;
+        }
+        .lang-switcher button.active { background-color: #512DA8; }
+        .main-content { padding: 25px; }
+        .law-selection { display: flex; justify-content: center; gap: 20px; margin-bottom: 25px; padding: 12px; background-color: rgba(240, 240, 240, 0.8); border-radius: 8px; }
+        .law-selection label { display: flex; align-items: center; cursor: pointer; font-weight: bold; font-size: 0.95em; }
+        .law-selection input { margin-right: 8px; transform: scale(1.2); }
+        .section-title { font-size: 1.25em; font-weight: bold; color: var(--button-bg); margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--button-bg); }
+        .calculation-steps { margin-top: 30px; }
+        .calculation-steps ol { padding-left: 20px; font-size: 0.9em; line-height: 1.7; color: #555; }
+        .input-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+        .input-row:last-child { border-bottom: none; }
+        .input-row label { font-size: 1em; flex-basis: 60%; color: var(--primary-text-color); }
+        .input-control { display: flex; align-items: center; }
+        .input-control button { width: 30px; height: 30px; border: 1px solid var(--border-color); background-color: #f0f0f0; font-size: 1.2em; font-weight: bold; cursor: pointer; border-radius: 50%; color: var(--primary-text-color); transition: background-color 0.2s; }
+        .input-control button:hover { background-color: #e0e0e0; }
+        .input-control input, .property-section .input-control input { width: 50px; height: 30px; text-align: center; border: 1px solid var(--border-color); border-radius: 5px; margin: 0 5px; font-size: 1.2em; background-color: #fff; color: var(--primary-text-color); }
+        .property-section .input-row label { flex-basis: 40%; }
+        .property-section .input-control input { width: 150px; }
+        .calculate-btn { display: block; width: 100%; padding: 15px; background-color: var(--button-bg); color: var(--dark-text-color); border: none; border-radius: 8px; font-size: 1.2em; cursor: pointer; margin-top: 30px; transition: background-color 0.3s; }
+        .calculate-btn:hover { background-color: #512DA8; }
+        #results { margin-top: 30px; padding: 20px; border: 1px solid var(--border-color); border-radius: 8px; background-color: #fafafa; color: var(--primary-text-color); }
+        .error-message { color: var(--danger-color); font-weight: bold; text-align: center; margin-top: 15px; }
+        .results-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .results-table th, .results-table td { border: 1px solid var(--border-color); padding: 10px; text-align: center; color: var(--primary-text-color); }
+        .results-table th { background-color: #f0f0f0; color: var(--primary-text-color); }
+        .pie-chart-container { display: flex; justify-content: center; align-items: center; margin-top: 25px; flex-wrap: wrap; }
+        #pieChart { width: 150px; height: 150px; border-radius: 50%; background-image: conic-gradient(transparent 0deg); }
+        .legend { margin-left: 20px; font-size: 0.9em; color: var(--primary-text-color); }
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
+        .legend-color { width: 15px; height: 15px; margin-right: 8px; border-radius: 3px; }
+    </style>
+</head>
+<body class="theme-light">
+    <div class="calculator-container">
+        <div class="header">
+            <span id="header-title"></span>
+            <div class="lang-switcher">
+                <button id="lang-bn"></button>
+                <button id="lang-en"></button>
+            </div>
+        </div>
+        <div class="main-content">
+            <form id="inheritance-form">
+                <div class="law-selection">
+                    <label>
+                        <input type="radio" name="lawType" value="muslim" checked>
+                        <span id="law-muslim-label"></span>
+                    </label>
+                    <label>
+                        <input type="radio" name="lawType" value="general">
+                        <span id="law-general-label"></span>
+                    </label>
+                </div>
+
+                <div class="section-title" id="heir-list-title"></div>
+                <div id="heirs-list"></div>
+
+                <div class="property-section">
+                    <div class="section-title" id="asset-details-title"></div>
+                    <div class="input-row">
+                        <label for="land" id="land-label"></label>
+                        <div class="input-control">
+                           <input type="text" id="land" value="0">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="money" id="money-label"></label>
+                        <div class="input-control">
+                            <input type="text" id="money" value="0">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="gold" id="gold-label"></label>
+                        <div class="input-control">
+                            <input type="text" id="gold" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="calculate-btn" id="calculate-btn"></button>
+            </form>
+
+            <div id="results" style="display: none;"></div>
+            <div id="error-message" class="error-message"></div>
+        </div>
+    </div>
+
+    <script>
+    // --- Start of JavaScript Code ---
+    const NumberConverter = {
+        eng: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'],
+        ban: ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯', '.'],
+        toBengali(numStr) { let str = String(numStr); let result = ''; for (let char of str) { const index = this.eng.indexOf(char); result += index !== -1 ? this.ban[index] : char; } return result; },
+        toEnglish(numStr) { let str = String(numStr); let result = ''; for (let char of str) { const index = this.ban.indexOf(char); result += index !== -1 ? this.eng[index] : char; } return result; }
+    };
+    const translations = {
+        bn: {
+            langBtn: "বাংলা", headerTitle: "উত্তরাধিকার ক্যালকুলেটর", lawMuslim: "মুসলিম আইন (১৯৬১ অধ্যাদেশ সহ)", lawGeneral: "সাধারণ আইন (১৯২৫)", heirListTitleMuslim: "জীবিত আত্মীয়-স্বজনের তালিকা (মুসলিম)", heirListTitleGeneral: "জীবিত আত্মীয়-স্বজনের তালিকা (সাধারণ)", assetDetailsTitle: "সম্পদের বিবরণ", landLabel: "জমি (শতাংশ)", moneyLabel: "মুদ্রা (টাকা)", goldLabel: "স্বর্ণ (ভরি)", calculateBtn: "ফলাফল দেখুন", resultsTitle: "বন্টনকৃত সম্পদের তালিকা", errorSpouse: "একজন মৃত ব্যক্তির স্বামী এবং স্ত্রী উভয়ই জীবিত থাকতে পারে না।", noHeirs: "প্রদত্ত আত্মীয়দের মধ্যে কোন ওয়ারিশ নেই।", tableHeaderHeir: "আত্মীয়-স্বজন", tableHeaderShare: "অংশ", tableHeaderLand: "জমি (শতাংশ)", tableHeaderMoney: "মুদ্রা (টাকা)", tableHeaderGold: "স্বর্ণ (ভরি)", peopleSuffix: "জন", stepsTitle: "হিসাবের ধাপসমূহ"
+        },
+        en: {
+            langBtn: "English", headerTitle: "Inheritance Calculator", lawMuslim: "Muslim Law (with 1961 Ordinance)", lawGeneral: "General Law (1925)", heirListTitleMuslim: "List of Living Relatives (Muslim)", heirListTitleGeneral: "List of Living Relatives (General)", assetDetailsTitle: "Asset Details", landLabel: "Land (decimal)", moneyLabel: "Cash (Taka)", goldLabel: "Gold (Bhori)", calculateBtn: "Calculate", resultsTitle: "Distribution of Assets", errorSpouse: "A deceased person cannot have both a living husband and a living wife.", noHeirs: "No eligible heirs among the relatives provided.", tableHeaderHeir: "Relatives", tableHeaderShare: "Share", tableHeaderLand: "Land (decimal)", tableHeaderMoney: "Cash (Taka)", tableHeaderGold: "Gold (Bhori)", peopleSuffix: "person(s)", stepsTitle: "Calculation Steps"
+        }
+    };
+    let currentLanguage = 'bn';
+    
+    // UPDATED: Added new relatives
+    const MUSLIM_HEIRS_CONFIG = [
+        { id: 'husband', name: { bn: 'স্বামী', en: 'Husband' }, max: 1 }, { id: 'wife', name: { bn: 'স্ত্রী', en: 'Wife' }, max: 4 },
+        { id: 'son', name: { bn: 'পুত্র', en: 'Son' } }, { id: 'daughter', name: { bn: 'কন্যা', en: 'Daughter' } },
+        { id: 'father', name: { bn: 'পিতা', en: 'Father' }, max: 1 }, { id: 'mother', name: { bn: 'মাতা', en: 'Mother' }, max: 1 },
+        { id: 'paternalGrandfather', name: { bn: 'দাদা (পিতার পিতা)', en: 'Paternal Grandfather' }, max: 1 },
+        { id: 'paternalGrandmother', name: { bn: 'দাদী (পিতার মাতা)', en: 'Paternal Grandmother' }, max: 1 },
+        { id: 'maternalGrandmother', name: { bn: 'নানী (মাতার মাতা)', en: 'Maternal Grandmother' }, max: 1 },
+        { id: 'fullBrother', name: { bn: 'সহোদর ভাই', en: 'Full Brother' } }, { id: 'fullSister', name: { bn: 'সহোদর বোন', en: 'Full Sister' } },
+        { id: 'paternalHalfBrother', name: { bn: 'সৎ ভাই (বৈমাত্রেয়)', en: 'Paternal Half Brother' } },
+        { id: 'paternalHalfSister', name: { bn: 'সৎ বোন (বৈমাত্রেয়)', en: 'Paternal Half Sister' } },
+        { id: 'maternalHalfBrother', name: { bn: 'সৎ ভাই (বৈপিত্রেয়)', en: 'Maternal Half Brother' } },
+        { id: 'maternalHalfSister', name: { bn: 'সৎ বোন (বৈপিত্রেয়)', en: 'Maternal Half Sister' } },
+        { id: 'fullBrothersSon', name: { bn: 'সহোদর ভাইয়ের পুত্র', en: 'Full Brother\'s Son' } },
+        { id: 'paternalHalfBrothersSon', name: { bn: 'বৈমাত্রেয় ভাইয়ের পুত্র', en: 'Paternal Half Brother\'s Son' } },
+        { id: 'fullPaternalUncle', name: { bn: 'আপন চাচা', en: 'Full Paternal Uncle' } },
+        { id: 'paternalHalfPaternalUncle', name: { bn: 'সৎ চাচা (বৈমাত্রেয়)', en: 'Paternal Half Uncle' } },
+        { id: 'fullPaternalUnclesSon', name: { bn: 'আপন চাচার পুত্র', en: 'Full Paternal Uncle\'s Son' } },
+        // --- Fields for Muslim Family Laws Ordinance, 1961, Section 4 ---
+        { id: 'predeceasedSon', name: { bn: 'পূর্বমৃত পুত্র', en: 'Predeceased Son' } },
+        { id: 'childrenOfPredeceasedSon', name: { bn: 'পূর্বমৃত পুত্রের সন্তান', en: 'Children of Predeceased Son' } },
+        { id: 'predeceasedDaughter', name: { bn: 'পূর্বমৃত কন্যা', en: 'Predeceased Daughter' } },
+        { id: 'childrenOfPredeceasedDaughter', name: { bn: 'পূর্বমৃত কন্যার সন্তান', en: 'Children of Predeceased Daughter' } },
+    ];
+
+    const GENERAL_HEIRS_CONFIG = [
+        { id: 'spouse', name: { bn: 'স্বামী/স্ত্রী', en: 'Spouse' }, max: 1 },
+        { id: 'son', name: { bn: 'পুত্র', en: 'Son' } },
+        { id: 'daughter', name: { bn: 'কন্যা', en: 'Daughter' } },
+        { id: 'father', name: { bn: 'পিতা', en: 'Father' }, max: 1 },
+        { id: 'mother', name: { bn: 'মাতা', en: 'Mother' }, max: 1 },
+        { id: 'brother', name: { bn: 'ভাই', en: 'Brother' } },
+        { id: 'sister', name: { bn: 'বোন', en: 'Sister' } },
+    ];
+
+    function setLanguage(lang) {
+        currentLanguage = lang; document.documentElement.lang = lang;
+        const t = translations[lang];
+        document.getElementById('header-title').textContent = t.headerTitle;
+        document.getElementById('law-muslim-label').textContent = t.lawMuslim;
+        document.getElementById('law-general-label').textContent = t.lawGeneral;
+        document.getElementById('asset-details-title').textContent = t.assetDetailsTitle;
+        document.getElementById('land-label').textContent = t.landLabel;
+        document.getElementById('money-label').textContent = t.moneyLabel;
+        document.getElementById('gold-label').textContent = t.goldLabel;
+        document.getElementById('calculate-btn').textContent = t.calculateBtn;
+        document.getElementById('lang-bn').textContent = t.langBtn;
+        document.getElementById('lang-en').textContent = translations.en.langBtn;
+        document.getElementById('lang-bn').classList.toggle('active', lang === 'bn');
+        document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+        document.querySelectorAll('input[type="text"]').forEach(input => {
+            const currentVal = input.value;
+            if (lang === 'bn') { input.value = NumberConverter.toBengali(NumberConverter.toEnglish(currentVal)); }
+            else { input.value = NumberConverter.toEnglish(currentVal); }
+        });
+        updateHeirListUI();
+        document.getElementById('results').style.display = 'none'; document.getElementById('error-message').textContent = '';
+    }
+
+    function updateHeirListUI() {
+        const selectedLaw = document.querySelector('input[name="lawType"]:checked').value;
+        const HEIRS_CONFIG = selectedLaw === 'muslim' ? MUSLIM_HEIRS_CONFIG : GENERAL_HEIRS_CONFIG;
+        const titleKey = selectedLaw === 'muslim' ? 'heirListTitleMuslim' : 'heirListTitleGeneral';
+        document.getElementById('heir-list-title').textContent = translations[currentLanguage][titleKey];
+        
+        const listContainer = document.getElementById('heirs-list');
+        const oldValues = {};
+        listContainer.querySelectorAll('input[type="text"]').forEach(input => {
+            oldValues[input.id] = input.value;
+        });
+        listContainer.innerHTML = '';
+
+        HEIRS_CONFIG.forEach(heir => {
+            const row = document.createElement('div'); row.className = 'input-row';
+            const label = document.createElement('label'); label.setAttribute('for', heir.id); label.textContent = heir.name[currentLanguage];
+            const control = document.createElement('div'); control.className = 'input-control';
+            const minusBtn = document.createElement('button'); minusBtn.type = 'button'; minusBtn.textContent = '−';
+            minusBtn.onclick = () => updateValue(heir.id, -1, HEIRS_CONFIG);
+            const input = document.createElement('input'); input.type = 'text'; input.id = heir.id; input.name = heir.id; input.setAttribute('readonly', true);
+            let initialValue = oldValues[heir.id] ? NumberConverter.toEnglish(oldValues[heir.id]) : '0';
+            input.value = currentLanguage === 'bn' ? NumberConverter.toBengali(initialValue) : initialValue;
+            const plusBtn = document.createElement('button'); plusBtn.type = 'button'; plusBtn.textContent = '+';
+            plusBtn.onclick = () => updateValue(heir.id, 1, HEIRS_CONFIG);
+            control.appendChild(minusBtn); control.appendChild(input); control.appendChild(plusBtn);
+            row.appendChild(label); row.appendChild(control); listContainer.appendChild(row);
+        });
+    }
+
+    function updateValue(id, change, config) {
+        const input = document.getElementById(id);
+        const englishValue = NumberConverter.toEnglish(input.value);
+        let currentValue = parseInt(englishValue, 10) || 0;
+        let newValue = currentValue + change;
+        if (newValue < 0) newValue = 0;
+        const heirConfig = config.find(h => h.id === id);
+        if (heirConfig.max && newValue > heirConfig.max) { newValue = heirConfig.max; }
+        input.value = currentLanguage === 'bn' ? NumberConverter.toBengali(String(newValue)) : String(newValue);
+    }
+    
+    class Fraction {
+        constructor(num, den = 1) { if (den === 0) throw new Error("Denominator cannot be zero."); num = Math.round(num); den = Math.round(den); const commonDivisor = this.gcd(num, den); this.num = num / commonDivisor; this.den = den / commonDivisor; }
+        gcd(a, b) { a = Math.abs(a); b = Math.abs(b); return b === 0 ? a : this.gcd(b, a % b); }
+        add(other) { return new Fraction(this.num * other.den + other.num * this.den, this.den * other.den); }
+        subtract(other) { return new Fraction(this.num * other.den - other.num * this.den, this.den * other.den); }
+        multiply(other) { return new Fraction(this.num * other.num, this.den * other.den); }
+        divide(other) { if (other.num === 0) throw new Error("Cannot divide by zero fraction."); return new Fraction(this.num * other.den, this.den * other.num); }
+        isGreaterThan(other) { return this.num * other.den > other.num * this.den; }
+        isZero() { return this.num === 0; }
+        toFloat() { return this.num / this.den; }
+        toString() { const numStr = currentLanguage === 'bn' ? NumberConverter.toBengali(this.num) : this.num; const denStr = currentLanguage === 'bn' ? NumberConverter.toBengali(this.den) : this.den; return this.den === 1 ? numStr : `${numStr}/${denStr}`; }
+    }
+    const ZERO = new Fraction(0); const ONE = new Fraction(1);
+    
+    function calculateMuslimInheritance(h_orig) {
+        let shares = {};
+        let steps = [];
+        const name = (id) => MUSLIM_HEIRS_CONFIG.find(heir => heir.id === id).name[currentLanguage];
+        let remainingProperty = ONE;
+
+        // --- Step 1: MFLO 1961, Section 4 for orphaned grandchildren ---
+        let orphanedGrandchildrenShares = {};
+        if (h_orig.predeceasedSon > 0 && h_orig.childrenOfPredeceasedSon > 0) {
+            const hypotheticalHeirs = {...h_orig, son: (h_orig.son || 0) + h_orig.predeceasedSon, predeceasedSon: 0, childrenOfPredeceasedSon: 0 };
+            const hypotheticalResult = calculateClassicHanafi(hypotheticalHeirs, false); 
+            if (hypotheticalResult.distribution.son) {
+                const onePredeceasedSonShare = hypotheticalResult.distribution.son.totalShare.divide(new Fraction(hypotheticalHeirs.son));
+                const totalShareForOrphanedSonsChildren = onePredeceasedSonShare.multiply(new Fraction(h_orig.predeceasedSon));
+                
+                orphanedGrandchildrenShares.childrenOfPredeceasedSon = {
+                    totalShare: totalShareForOrphanedSonsChildren,
+                    name: name('childrenOfPredeceasedSon')
+                };
+                remainingProperty = remainingProperty.subtract(totalShareForOrphanedSonsChildren);
+                steps.push(`মুসলিম পারিবারিক আইন অধ্যাদেশ, ১৯৬১ এর ৪ ধারা (প্রতিনিধিত্বের নীতি) অনুযায়ী, ${NumberConverter.toBengali(h_orig.predeceasedSon)} জন পূর্বমৃত পুত্রের জীবিত ${NumberConverter.toBengali(h_orig.childrenOfPredeceasedSon)} জন সন্তান তাদের পিতার প্রাপ্য অংশ (${totalShareForOrphanedSonsChildren.toString()}) পাবে।`);
+            }
+        }
+        if (h_orig.predeceasedDaughter > 0 && h_orig.childrenOfPredeceasedDaughter > 0) {
+            const hypotheticalHeirs = {...h_orig, daughter: (h_orig.daughter || 0) + h_orig.predeceasedDaughter, predeceasedDaughter: 0, childrenOfPredeceasedDaughter: 0 };
+            const hypotheticalResult = calculateClassicHanafi(hypotheticalHeirs, false);
+             if (hypotheticalResult.distribution.daughter) {
+                const onePredeceasedDaughterShare = hypotheticalResult.distribution.daughter.totalShare.divide(new Fraction(hypotheticalHeirs.daughter));
+                const totalShareForOrphanedDaughtersChildren = onePredeceasedDaughterShare.multiply(new Fraction(h_orig.predeceasedDaughter));
+                
+                orphanedGrandchildrenShares.childrenOfPredeceasedDaughter = {
+                    totalShare: totalShareForOrphanedDaughtersChildren,
+                    name: name('childrenOfPredeceasedDaughter')
+                };
+                remainingProperty = remainingProperty.subtract(totalShareForOrphanedDaughtersChildren);
+                steps.push(`মুসলিম পারিবারিক আইন অধ্যাদেশ, ১৯৬১ এর ৪ ধারা (প্রতিনিধিত্বের নীতি) অনুযায়ী, ${NumberConverter.toBengali(h_orig.predeceasedDaughter)} জন পূর্বমৃত কন্যার জীবিত ${NumberConverter.toBengali(h_orig.childrenOfPredeceasedDaughter)} জন সন্তান তাদের মাতার প্রাপ্য অংশ (${totalShareForOrphanedDaughtersChildren.toString()}) পাবে।`);
+            }
+        }
+        // --- End of MFLO 1961 Section 4 Logic ---
+
+        // Step 2: Calculate for remaining living heirs with remaining property
+        const livingHeirs = {...h_orig, predeceasedSon: 0, childrenOfPredeceasedSon: 0, predeceasedDaughter: 0, childrenOfPredeceasedDaughter: 0 };
+        const classicResult = calculateClassicHanafi(livingHeirs, true);
+        
+        for (const key in classicResult.distribution) {
+            shares[key] = {
+                totalShare: classicResult.distribution[key].totalShare.multiply(remainingProperty),
+                name: classicResult.distribution[key].name
+            };
+        }
+        if(!remainingProperty.isZero() && remainingProperty.num !== remainingProperty.den){
+             steps.push(...classicResult.steps.map(step => `অবশিষ্ট ${remainingProperty.toString()} অংশের উপর: ${step}`));
+        } else if (Object.keys(orphanedGrandchildrenShares).length === 0) {
+             steps.push(...classicResult.steps);
+        }
+        
+        const finalDistribution = {...shares, ...orphanedGrandchildrenShares};
+        return { distribution: finalDistribution, steps: [...new Set(steps)] };
+    }
+
+    // UPDATED: Completely revised with more detailed Hanafi rules
+    function calculateClassicHanafi(h_orig, withSteps = true) {
+        const h = JSON.parse(JSON.stringify(h_orig));
+        let shares = {}; 
+        let steps = [];
+        const name = (id) => MUSLIM_HEIRS_CONFIG.find(heir => heir.id === id)?.name[currentLanguage] || id;
+
+        const F_1_8 = new Fraction(1, 8), F_1_6 = new Fraction(1, 6), F_1_4 = new Fraction(1, 4), F_1_3 = new Fraction(1, 3), F_1_2 = new Fraction(1, 2), F_2_3 = new Fraction(2, 3);
+        
+        MUSLIM_HEIRS_CONFIG.forEach(heir => { if(heir.id) shares[heir.id] = ZERO; });
+
+        const sonExists = h.son > 0;
+        const daughterExists = h.daughter > 0;
+        const fatherExists = h.father > 0;
+        const paternalGrandfatherExists = h.paternalGrandfather > 0;
+        const maleDescendantExists = sonExists; // In Hanafi law, son's son is also included but not in UI yet.
+        const descendantExists = sonExists || daughterExists;
+        const maleAscendantExists = fatherExists || paternalGrandfatherExists;
+
+        // Step 1: Hujub (Exclusion) Rules
+        if (sonExists || fatherExists || paternalGrandfatherExists) {
+             if(h.fullBrother > 0 || h.fullSister > 0 || h.paternalHalfBrother > 0 || h.paternalHalfSister > 0) {
+                  if (withSteps) steps.push(`পুত্র, পিতা বা দাদা থাকায় সকল প্রকার ভাই-বোন বঞ্চিত হবেন।`);
+                  h.fullBrother = h.fullSister = h.paternalHalfBrother = h.paternalHalfSister = 0;
+             }
+        }
+        if (descendantExists || maleAscendantExists) {
+            if(h.maternalHalfBrother > 0 || h.maternalHalfSister > 0) {
+                 if (withSteps) steps.push(`মৃতের সন্তান বা পিতা/দাদা থাকায় বৈপিত্রেয় ভাই-বোনেরা বঞ্চিত হবেন।`);
+                 h.maternalHalfBrother = h.maternalHalfSister = 0;
+            }
+        }
+        if (sonExists || fatherExists || paternalGrandfatherExists || h.fullBrother > 0 || h.paternalHalfBrother > 0) {
+            if(h.fullBrothersSon > 0 || h.paternalHalfBrothersSon > 0 || h.fullPaternalUncle > 0 || h.paternalHalfPaternalUncle > 0 || h.fullPaternalUnclesSon > 0) {
+                 if (withSteps) steps.push(`নিকটবর্তী আসাবা (পুত্র, পিতা, ভাই) থাকায় ভাতিজা, চাচা এবং চাচাতো ভাইয়েরা বঞ্চিত হবেন।`);
+                 h.fullBrothersSon = h.paternalHalfBrothersSon = h.fullPaternalUncle = h.paternalHalfPaternalUncle = h.fullPaternalUnclesSon = 0;
+            }
+        }
+        if (h.fullBrother > 0) {
+            if (h.paternalHalfBrother > 0 || h.paternalHalfSister > 0) {
+                if (withSteps) steps.push(`সহোদর ভাই থাকায় বৈমাত্রেয় ভাই-বোন বঞ্চিত হবেন।`);
+                h.paternalHalfBrother = h.paternalHalfSister = 0;
+            }
+        }
+        if (h.fullSister > 0 && h.daughter > 0 && !sonExists && !fatherExists) {
+             if (h.paternalHalfBrother > 0 || h.paternalHalfSister > 0) {
+                if (withSteps) steps.push(`কন্যাদের সাথে আসাবা হওয়ায় সহোদর বোন বৈমাত্রেয় ভাই-বোনদের বঞ্চিত করবে।`);
+                h.paternalHalfBrother = h.paternalHalfSister = 0;
+            }
+        }
+        if (fatherExists) {
+            if (h.paternalGrandfather > 0) {
+                if (withSteps) steps.push(`${name('paternalGrandfather')} ${name('father')} দ্বারা বঞ্চিত হবেন।`);
+                h.paternalGrandfather = 0;
+            }
+        }
+
+
+        // Step 2: Dhul Furoodh (Prescribed Sharers)
+        if (h.husband > 0) { shares.husband = descendantExists ? F_1_4 : F_1_2; if (withSteps) steps.push(`${name('husband')} ${descendantExists ? 'সন্তান থাকায়' : 'সন্তান না থাকায়'} ${shares.husband.toString()} অংশ পাবেন।`); }
+        if (h.wife > 0) { shares.wife = descendantExists ? F_1_8 : F_1_4; if (withSteps) steps.push(`${name('wife')} ${descendantExists ? 'সন্তান থাকায়' : 'সন্তান না থাকায়'} ${shares.wife.toString()} অংশ পাবেন।`); }
+        if (h.father > 0) { if (maleDescendantExists) { shares.father = F_1_6; if (withSteps) steps.push(`${name('father')} পুত্র-সন্তান থাকায় ১/৬ অংশ পাবেন।`); }}
+        if (h.paternalGrandfather > 0 && !fatherExists) { if (maleDescendantExists) { shares.paternalGrandfather = F_1_6; if (withSteps) steps.push(`${name('paternalGrandfather')} পুত্র-সন্তান থাকায় ও পিতা না থাকায় ১/৬ অংশ পাবেন।`); }}
+        if (h.mother > 0) {
+            const numSiblings = (h.fullBrother || 0) + (h.fullSister || 0) + (h.paternalHalfBrother || 0) + (h.paternalHalfSister || 0) + (h.maternalHalfBrother || 0) + (h.maternalHalfSister || 0);
+            shares.mother = (descendantExists || numSiblings >= 2) ? F_1_6 : F_1_3;
+            if (withSteps) steps.push(`${name('mother')} ${descendantExists || numSiblings >= 2 ? 'সন্তান বা একাধিক ভাইবোন থাকায়' : ''} ${shares.mother.toString()} অংশ পাবেন।`);
+        }
+        if (h.daughter > 0 && !sonExists) {
+            shares.daughter = h.daughter === 1 ? F_1_2 : F_2_3;
+            if (withSteps) steps.push(`${name('daughter')} (পুত্র না থাকায়) ${h.daughter === 1 ? 'একা হওয়ায়' : 'একাধিক হওয়ায়'} ${shares.daughter.toString()} অংশ পাবেন।`);
+        }
+        if (h.fullSister > 0 && !sonExists && !daughterExists && !fatherExists && !paternalGrandfatherExists && !h.fullBrother > 0) {
+            shares.fullSister = h.fullSister === 1 ? F_1_2 : F_2_3;
+             if (withSteps) steps.push(`${name('fullSister')} ${h.fullSister === 1 ? 'একা হওয়ায়' : 'একাধিক হওয়ায়'} ${shares.fullSister.toString()} অংশ পাবেন।`);
+        }
+        const numMaternalSiblings = (h.maternalHalfBrother || 0) + (h.maternalHalfSister || 0);
+        if (numMaternalSiblings > 0) {
+            if (numMaternalSiblings === 1) {
+                const share = F_1_6;
+                if(h.maternalHalfBrother>0) shares.maternalHalfBrother = share; else shares.maternalHalfSister = share;
+                if(withSteps) steps.push(`বৈপিত্রেয় ভাই/বোন একা হওয়ায় ১/৬ অংশ পাবেন।`);
+            } else {
+                 const totalShare = F_1_3;
+                 if(h.maternalHalfBrother>0) shares.maternalHalfBrother = totalShare.multiply(new Fraction(h.maternalHalfBrother, numMaternalSiblings));
+                 if(h.maternalHalfSister>0) shares.maternalHalfSister = totalShare.multiply(new Fraction(h.maternalHalfSister, numMaternalSiblings));
+                 if(withSteps) steps.push(`একাধিক বৈপিত্রেয় ভাই-বোন থাকায় সম্মিলিতভাবে ১/৩ অংশ পাবেন (নারী-পুরুষ সমান)।`);
+            }
+        }
+        
+        // Step 3: Asaba (Residuaries)
+        let totalAssignedShare = Object.values(shares).reduce((sum, val) => sum.add(val), ZERO);
+        let residue = ONE.subtract(totalAssignedShare);
+        
+        if (residue.isGreaterThan(ZERO) && residue.num > 0) {
+            if (withSteps) steps.push(`অবশিষ্ট সম্পত্তি ${residue.toString()} অংশ 'আসাবা' (অবশিষ্টভোগী) হিসেবে বন্টন করা হবে।`);
+            let asabaHeirs = [];
+            
+            // Asaba priority order
+            if (h.son > 0) {
+                asabaHeirs.push({ type: 'son', count: h.son, strength: 2 });
+                if (h.daughter > 0) asabaHeirs.push({ type: 'daughter', count: h.daughter, strength: 1 });
+            } else if (h.father > 0) {
+                 shares.father = (shares.father || ZERO).add(residue); residue = ZERO;
+                 if (withSteps) steps.push(`${name('father')} নিকটতম আসাবা হিসেবে অবশিষ্ট অংশও পাবেন।`);
+            } else if (h.paternalGrandfather > 0 && !fatherExists) {
+                shares.paternalGrandfather = (shares.paternalGrandfather || ZERO).add(residue); residue = ZERO;
+                if (withSteps) steps.push(`${name('paternalGrandfather')} আসাবা হিসেবে অবশিষ্ট অংশ পাবেন।`);
+            } else if (h.fullBrother > 0 || (h.fullSister > 0 && h.daughter > 0)) {
+                if (h.fullBrother > 0) asabaHeirs.push({ type: 'fullBrother', count: h.fullBrother, strength: 2 });
+                if (h.fullSister > 0) asabaHeirs.push({ type: 'fullSister', count: h.fullSister, strength: 1 });
+            } else if (h.paternalHalfBrother > 0 || (h.paternalHalfSister > 0 && h.daughter > 0)) {
+                 if (h.paternalHalfBrother > 0) asabaHeirs.push({ type: 'paternalHalfBrother', count: h.paternalHalfBrother, strength: 2 });
+                 if (h.paternalHalfSister > 0) asabaHeirs.push({ type: 'paternalHalfSister', count: h.paternalHalfSister, strength: 1 });
+            } else if (h.fullSister > 0) { // full sister as asaba alone
+                 asabaHeirs.push({ type: 'fullSister', count: h.fullSister, strength: 1 });
+            } else if (h.fullBrothersSon > 0) {
+                 asabaHeirs.push({ type: 'fullBrothersSon', count: h.fullBrothersSon, strength: 1 });
+            } else if (h.paternalHalfBrothersSon > 0) {
+                 asabaHeirs.push({ type: 'paternalHalfBrothersSon', count: h.paternalHalfBrothersSon, strength: 1 });
+            } else if (h.fullPaternalUncle > 0) {
+                 asabaHeirs.push({ type: 'fullPaternalUncle', count: h.fullPaternalUncle, strength: 1 });
+            } // ... and so on for other asaba
+
+            if (asabaHeirs.length > 0) {
+                let totalStrength = asabaHeirs.reduce((sum, heir) => sum + heir.count * heir.strength, 0);
+                if (totalStrength > 0) {
+                    asabaHeirs.forEach(heir => {
+                        const asabaShare = residue.multiply(new Fraction(heir.count * heir.strength, totalStrength));
+                        shares[heir.type] = (shares[heir.type] || ZERO).add(asabaShare);
+                    });
+                }
+            }
+        }
+        
+        totalAssignedShare = Object.values(shares).reduce((sum, val) => sum.add(val), ZERO);
+        
+        // Step 4: Awl (Increase) and Radd (Return)
+        if (totalAssignedShare.isGreaterThan(ONE)) {
+            if (withSteps) steps.push(`মোট অংশ ১ এর বেশি হওয়ায় 'আউল' নীতিতে আনুপাতিক হারে কমানো হয়েছে।`);
+            const awlFactor = totalAssignedShare;
+            for (const key in shares) { if(!shares[key].isZero()) shares[key] = shares[key].divide(awlFactor); }
+        } else if (totalAssignedShare.num < totalAssignedShare.den && !(Object.keys(shares).some(key => ['son', 'father', 'fullBrother', 'paternalHalfBrother', 'fullBrothersSon', 'paternalHalfBrothersSon', 'fullPaternalUncle'].includes(key) && !shares[key].isZero()))) {
+            let raddSharers = {};
+            let raddTotalShare = ZERO;
+            const spouseShare = (shares.husband || ZERO).add(shares.wife || ZERO);
+            for (const key in shares) {
+                if (key !== 'husband' && key !== 'wife' && !shares[key].isZero()) {
+                    raddSharers[key] = shares[key];
+                    raddTotalShare = raddTotalShare.add(shares[key]);
+                }
+            }
+            if (!raddTotalShare.isZero()) {
+                if(withSteps) steps.push(`সম্পত্তি অবশিষ্ট থাকায় এবং কোনো আসাবা না থাকায় 'রাদ' নীতিতে স্বামী/স্ত্রী ছাড়া বাকিদের অংশ আনুপাতিক হারে বৃদ্ধি পাবে।`);
+                const residueForRadd = ONE.subtract(spouseShare);
+                for (const key in raddSharers) {
+                    shares[key] = raddSharers[key].multiply(new Fraction(residueForRadd.num * raddTotalShare.den, residueForRadd.den * raddTotalShare.num));
+                }
+            }
+        }
+
+        const finalDistribution = {};
+        for (const key in shares) {
+            if (h_orig[key] > 0 && !shares[key].isZero()) {
+                finalDistribution[key] = { totalShare: shares[key], name: name(key) };
+            }
+        }
+        return { distribution: finalDistribution, steps: [...new Set(steps)] };
+    }
+
+    function calculateGeneralSuccession(h) {
+        let shares = {}; let steps = [];
+        const name = (id) => GENERAL_HEIRS_CONFIG.find(heir => heir.id === id).name[currentLanguage];
+        const numChildren = h.son + h.daughter;
+
+        if (h.spouse > 0) {
+            if (numChildren > 0) {
+                shares.spouse = new Fraction(1, 3);
+                steps.push(`${name('spouse')} সন্তান থাকায় ১/৩ অংশ পাবেন।`);
+                const childrenShare = new Fraction(2, 3);
+                if (h.son > 0) shares.son = childrenShare.multiply(new Fraction(h.son, numChildren));
+                if (h.daughter > 0) shares.daughter = childrenShare.multiply(new Fraction(h.daughter, numChildren));
+                steps.push(`পুত্র ও কন্যারা অবশিষ্ট ২/৩ অংশ সমানভাবে ভাগ করে পাবে।`);
+            } else if (h.father > 0 || h.mother > 0 || h.brother > 0 || h.sister > 0) {
+                shares.spouse = new Fraction(1, 2);
+                steps.push(`${name('spouse')} সন্তান না থাকায় ১/২ অংশ পাবেন।`);
+                const remaining = new Fraction(1, 2);
+                if(h.father > 0) {
+                    shares.father = remaining;
+                    steps.push(`${name('father')} অবশিষ্ট ১/২ অংশ পাবেন।`);
+                } else {
+                    const kindred = (h.mother || 0) + (h.brother || 0) + (h.sister || 0);
+                    if(kindred > 0){
+                        if(h.mother > 0) shares.mother = remaining.multiply(new Fraction(h.mother, kindred));
+                        if(h.brother > 0) shares.brother = remaining.multiply(new Fraction(h.brother, kindred));
+                        if(h.sister > 0) shares.sister = remaining.multiply(new Fraction(h.sister, kindred));
+                        steps.push(`মাতা, ভাই ও বোনেরা অবশিষ্ট ১/২ অংশ সমানভাবে ভাগ করে পাবে।`);
+                    } else { // Only spouse exists
+                        shares.spouse = ONE; // Spouse gets everything
+                        steps = [`${name('spouse')} অন্য কোন ওয়ারিশ না থাকায় সমস্ত সম্পত্তি পাবেন।`];
+                    }
+                }
+            } else {
+                shares.spouse = ONE;
+                steps.push(`${name('spouse')} অন্য কোন ওয়ারিশ না থাকায় সমস্ত সম্পত্তি পাবেন।`);
+            }
+        } else { // No spouse
+            if (numChildren > 0) {
+                if (h.son > 0) shares.son = ONE.multiply(new Fraction(h.son, numChildren));
+                if (h.daughter > 0) shares.daughter = ONE.multiply(new Fraction(h.daughter, numChildren));
+                steps.push(`পুত্র ও কন্যারা সমস্ত সম্পত্তি সমানভাবে ভাগ করে পাবে।`);
+            } else if (h.father > 0) {
+                shares.father = ONE;
+                steps.push(`${name('father')} নিকটতম ওয়ারিশ হিসেবে সমস্ত সম্পত্তি পাবেন।`);
+            } else if (h.mother > 0 || h.brother > 0 || h.sister > 0){
+                const kindred = (h.mother || 0) + (h.brother || 0) + (h.sister || 0);
+                if (h.mother > 0) shares.mother = ONE.multiply(new Fraction(h.mother, kindred));
+                if (h.brother > 0) shares.brother = ONE.multiply(new Fraction(h.brother, kindred));
+                if (h.sister > 0) shares.sister = ONE.multiply(new Fraction(h.sister, kindred));
+                steps.push(`মাতা, ভাই ও বোনেরা সমস্ত সম্পত্তি সমানভাবে পাবে।`);
+            }
+        }
+
+        const finalDistribution = {};
+        for (const key in shares) {
+            if (h[key] > 0 && !shares[key].isZero()) {
+                finalDistribution[key] = { totalShare: shares[key], name: name(key) };
+            }
+        }
+        return { distribution: finalDistribution, steps: [...new Set(steps)] };
+    }
+
+    // MODIFIED displayResults function to show individual heirs
+    function displayResults(resultData, assets, originalHeirs) {
+        const result = resultData.distribution; const steps = resultData.steps; const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = ''; resultsDiv.style.display = 'block';
+        const t = translations[currentLanguage];
+        if (Object.keys(result).length === 0) { resultsDiv.innerHTML = `<p style="text-align:center; font-weight:bold;">${t.noHeirs}</p>`; return; }
+        
+        let tableHTML = `<div class="section-title">${t.resultsTitle}</div><table class="results-table"><thead><tr><th>${t.tableHeaderHeir}</th><th>${t.tableHeaderShare}</th>${assets.land > 0 ? `<th>${t.tableHeaderLand}</th>` : ''}${assets.money > 0 ? `<th>${t.tableHeaderMoney}</th>` : ''}${assets.gold > 0 ? `<th>${t.tableHeaderGold}</th>` : ''}</tr></thead><tbody>`;
+        
+        const pieData = [];
+
+        for (const key in result) {
+            const heir = result[key];
+            const totalShare = heir.totalShare;
+            const count = originalHeirs[key] || 1;
+
+            if (count > 0 && !totalShare.isZero()) {
+                const individualShare = totalShare.divide(new Fraction(count));
+
+                for (let i = 1; i <= count; i++) {
+                    const landVal = (assets.land * individualShare.toFloat()).toFixed(2);
+                    const moneyVal = (assets.money * individualShare.toFloat()).toFixed(2);
+                    const goldVal = (assets.gold * individualShare.toFloat()).toFixed(2);
+                
+                    const displayLand = currentLanguage === 'bn' ? NumberConverter.toBengali(landVal) : landVal;
+                    const displayMoney = currentLanguage === 'bn' ? NumberConverter.toBengali(moneyVal) : moneyVal;
+                    const displayGold = currentLanguage === 'bn' ? NumberConverter.toBengali(goldVal) : goldVal;
+
+                    // ব্যক্তি একাধিক হলে নামের পাশে নম্বর যোগ করা
+                    const individualName = count > 1 ? `${heir.name} (${currentLanguage === 'bn' ? NumberConverter.toBengali(i) : i})` : heir.name;
+
+                    tableHTML += `<tr><td>${individualName}</td><td>${individualShare.toString()}</td>${assets.land > 0 ? `<td>${displayLand}</td>` : ''}${assets.money > 0 ? `<td>${displayMoney}</td>` : ''}${assets.gold > 0 ? `<td>${displayGold}</td>` : ''}</tr>`;
+                    
+                    // পাই চার্টের জন্য ডেটা প্রস্তুত করা
+                    pieData.push({
+                        name: individualName,
+                        share: individualShare
+                    });
+                }
+            }
+        }
+        tableHTML += '</tbody></table>';
+
+        const pieColors = ['#3498db', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#34495e', '#1abc9c', '#e67e22', '#7f8c8d'];
+        let gradientParts = []; let legendHTML = '<div class="legend">';
+        let currentDegree = 0; let colorIndex = 0;
+
+        // পাই চার্ট এবং লিজেন্ড নতুন pieData দিয়ে তৈরি করা
+        pieData.forEach(item => {
+            const percentage = item.share.toFloat() * 100;
+            if (percentage > 0) {
+                const color = pieColors[colorIndex % pieColors.length];
+                const startDegree = currentDegree;
+                const endDegree = currentDegree + (percentage * 3.6);
+                gradientParts.push(`${color} ${startDegree}deg ${endDegree}deg`);
+                currentDegree = endDegree;
+                const displayPercentage = currentLanguage === 'bn' ? NumberConverter.toBengali(percentage.toFixed(2)) : percentage.toFixed(2);
+                legendHTML += `<div class="legend-item"><div class="legend-color" style="background-color: ${color};"></div><span>${item.name}: ${displayPercentage}%</span></div>`;
+                colorIndex++;
+            }
+        });
+        legendHTML += '</div>';
+
+        const chartHTML = `<div class="pie-chart-container"><div id="pieChart" style="background-image: conic-gradient(${gradientParts.join(', ')});"></div>${legendHTML}</div>`;
+        let stepsHTML = '';
+        if(steps.length > 0) {
+            stepsHTML = `<div class="calculation-steps"><div class="section-title">${t.stepsTitle}</div><ol>`;
+            steps.forEach(step => { stepsHTML += `<li>${step}</li>`; });
+            stepsHTML += '</ol></div>';
+        }
+        resultsDiv.innerHTML = tableHTML + chartHTML + stepsHTML;
+    }
+
+    document.getElementById('inheritance-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const errorMessageDiv = document.getElementById('error-message');
+        errorMessageDiv.textContent = '';
+        document.getElementById('results').style.display = 'none';
+
+        const selectedLaw = document.querySelector('input[name="lawType"]:checked').value;
+        const HEIRS_CONFIG = selectedLaw === 'muslim' ? MUSLIM_HEIRS_CONFIG : GENERAL_HEIRS_CONFIG;
+
+        const heirs = {};
+        HEIRS_CONFIG.forEach(h => {
+            const inputEl = document.getElementById(h.id);
+            if (inputEl) {
+                heirs[h.id] = parseInt(NumberConverter.toEnglish(inputEl.value), 10) || 0;
+            } else {
+                 heirs[h.id] = 0;
+            }
+        });
+
+        const assets = {
+            land: parseFloat(NumberConverter.toEnglish(document.getElementById('land').value)) || 0,
+            money: parseFloat(NumberConverter.toEnglish(document.getElementById('money').value)) || 0,
+            gold: parseFloat(NumberConverter.toEnglish(document.getElementById('gold').value)) || 0
+        };
+
+        if (selectedLaw === 'muslim' && heirs.husband > 0 && heirs.wife > 0) {
+            errorMessageDiv.textContent = translations[currentLanguage].errorSpouse;
+            return;
+        }
+
+        let resultData;
+        try {
+            if (selectedLaw === 'muslim') {
+                resultData = calculateMuslimInheritance(heirs);
+            } else {
+                resultData = calculateGeneralSuccession(heirs);
+            }
+            displayResults(resultData, assets, heirs);
+        } catch (error) {
+            errorMessageDiv.textContent = 'An error occurred during calculation: ' + error.message;
+        }
+    });
+
+    document.getElementById('lang-bn').addEventListener('click', () => setLanguage('bn'));
+    document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
+    document.querySelectorAll('input[name="lawType"]').forEach(radio => {
+        radio.addEventListener('change', updateHeirListUI);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setLanguage('bn');
+    });
+    </script>
+</body>
+</html>
