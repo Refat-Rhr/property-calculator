@@ -85,6 +85,54 @@
         .legend { margin-left: 20px; font-size: 0.9em; color: var(--primary-text-color); }
         .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
         .legend-color { width: 15px; height: 15px; margin-right: 8px; border-radius: 3px; }
+
+        /* --- মোবাইল ভিউ এর জন্য নতুন CSS কোড --- */
+@media (max-width: 699px) {
+  .header {
+    /* হেডার থেকে বাটনটি সরে যাওয়ায় এর নিচের প্যাডিং কিছুটা কমানো হলো */
+    padding-bottom: 20px;
+  }
+
+  .lang-switcher {
+    position: static; /* অ্যাবসোলুট পজিশন তুলে দিয়ে নরমাল ফ্লো-তে আনা হলো */
+    transform: none;  /* আগের transform স্টাইলটি তুলে দেওয়া হলো */
+    display: flex;
+    justify-content: center;
+    margin: 15px auto 5px auto; /* উপরে-নিচে মার্জিন দিয়ে মূল কন্টেন্ট থেকে আলাদা করা হলো */
+  }
+
+  /* বাটনগুলোর রং পরিবর্তন করা হলো যাতে সাদা ব্যাকগ্রাউন্ডে স্পষ্টভাবে দেখা যায় */
+  .lang-switcher button {
+    color: var(--primary-text-color); /* টেক্সটের রং পরিবর্তন করে গাঢ় করা হলো */
+    background-color: #f0f0f0; /* হালকা একটি ব্যাকগ্রাউন্ড দেওয়া হলো */
+    padding: 8px 15px;
+    border: 1px solid var(--border-color);
+  }
+
+  /* অ্যাক্টিভ বাটনের স্টাইল পরিবর্তন করা হলো */
+  .lang-switcher button.active {
+    background-color: var(--button-bg); /* মূল থিমের বেগুনি রং */
+    color: var(--dark-text-color);    /* টেক্সটের রং সাদা করা হলো */
+    border-color: var(--button-bg);
+  }
+}
+/* --- মোবাইল ভিউতে টেবিল স্ক্রল করার জন্য নতুন CSS কোড --- */
+/* --- মোবাইল ভিউতে টেবিল স্ক্রল করার জন্য নতুন এবং নির্ভরযোগ্য CSS কোড --- */
+@media (max-width: 699px) {
+  .table-wrapper {
+    overflow-x: auto; /* কন্টেইনারটিকে হরাইজন্টালি স্ক্রলযোগ্য করে তোলে */
+    -webkit-overflow-scrolling: touch; /* iOS-এ স্মুথ স্ক্রলিং */
+    padding-bottom: 10px; /* স্ক্রলবারের জন্য সামান্য জায়গা তৈরি করে */
+  }
+
+  .results-table {
+    min-width: 500px; /* টেবিলের একটি সর্বনিম্ন প্রস্থ নির্ধারণ করে, যাতে কন্টেন্ট সংকুচিত না হয় */
+  }
+
+  .results-table th, .results-table td {
+     white-space: nowrap; /* টেবিলের লেখাগুলোকে এক লাইনে রাখে */
+  }
+}
     </style>
 </head>
 <body class="theme-light">
@@ -572,8 +620,8 @@
         const t = translations[currentLanguage];
         if (Object.keys(result).length === 0) { resultsDiv.innerHTML = `<p style="text-align:center; font-weight:bold;">${t.noHeirs}</p>`; return; }
         
-        let tableHTML = `<div class="section-title">${t.resultsTitle}</div><table class="results-table"><thead><tr><th>${t.tableHeaderHeir}</th><th>${t.tableHeaderShare}</th>${assets.land > 0 ? `<th>${t.tableHeaderLand}</th>` : ''}${assets.money > 0 ? `<th>${t.tableHeaderMoney}</th>` : ''}${assets.gold > 0 ? `<th>${t.tableHeaderGold}</th>` : ''}</tr></thead><tbody>`;
-        
+// --- শুধু এই একটি লাইন পরিবর্তন করুন ---
+let tableHTML = `<div class="section-title">${t.resultsTitle}</div><div class="table-wrapper"><table class="results-table"><thead><tr><th>${t.tableHeaderHeir}</th><th>${t.tableHeaderShare}</th>${assets.land > 0 ? `<th>${t.tableHeaderLand}</th>` : ''}${assets.money > 0 ? `<th>${t.tableHeaderMoney}</th>` : ''}${assets.gold > 0 ? `<th>${t.tableHeaderGold}</th>` : ''}</tr></thead><tbody>`;        
         const pieData = [];
 
         for (const key in result) {
@@ -606,7 +654,7 @@
                 }
             }
         }
-        tableHTML += '</tbody></table>';
+        tableHTML += '</tbody></table></div>'; // টেবিলের র‍্যাপার div এখানে শেষ হলো
 
         const pieColors = ['#3498db', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#34495e', '#1abc9c', '#e67e22', '#7f8c8d'];
         let gradientParts = []; let legendHTML = '<div class="legend">';
@@ -690,6 +738,30 @@
     document.addEventListener('DOMContentLoaded', () => {
         setLanguage('bn');
     });
+    /* --- মোবাইল ভিউ এর জন্য বাটন সরানোর নতুন JavaScript কোড --- */
+function repositionLangSwitcher() {
+    const header = document.querySelector('.header');
+    const langSwitcher = document.querySelector('.lang-switcher');
+    const calculatorContainer = document.querySelector('.calculator-container');
+
+    if (window.innerWidth < 700) {
+        // যদি স্ক্রিন ছোট হয়, বাটনটিকে হেডারের পরে এবং মূল কন্টেন্টের আগে স্থাপন করো
+        if (langSwitcher.parentElement !== calculatorContainer) {
+            header.after(langSwitcher);
+        }
+    } else {
+        // যদি স্ক্রিন বড় হয়, বাটনটিকে আবার হেডারের ভেতরে নিয়ে যাও
+        if (langSwitcher.parentElement !== header) {
+            header.appendChild(langSwitcher);
+        }
+    }
+}
+
+// পাতা লোড হওয়ার সময় একবার ফাংশনটি চালানো
+document.addEventListener('DOMContentLoaded', repositionLangSwitcher);
+
+// স্ক্রিনের আকার পরিবর্তন হলে ফাংশনটি আবার চালানো
+window.addEventListener('resize', repositionLangSwitcher);
     </script>
 </body>
 </html>
